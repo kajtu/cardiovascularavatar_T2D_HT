@@ -1,0 +1,15 @@
+*.dat
+*.asv
+*.autosave
+*.xlsx
+*.xls
+*.png
+*.fig
+*.pdf
+*.h
+*.c
+*.slxc
+*.out
+*.log
+Resultfigures_*
+*bestpatients*
