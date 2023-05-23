@@ -1,4 +1,4 @@
-function [minmaxSim] = findSimulationUncertainty(patNums,parameters,constants,inds,data,options,bestParams,saveResults,loadResults)
+function [minmaxSim,allSims,allParams,allPressure] = findSimulationUncertainty(patNums,parameters,constants,inds,data,options,bestParams,saveResults,loadResults)
 %parameters: cell with one or several parameter sets for each patient
 %constants: cell with constant values for each patient
 
@@ -41,6 +41,11 @@ else
         minmaxSim.([minmaxSim.pressurenames{pr} 'diff']).best = cell(size(parameters));
     end
     
+    allParams = cell(size(parameters));
+    allPressure.SBP = cell(size(parameters));
+    allPressure.DBP  = cell(size(parameters));
+    allSims = cell(size(parameters));
+    
     %% Run simulations
     w = warning('off','all');
     for p = 1:size(parameters,2)%for each subject
@@ -59,7 +64,10 @@ else
             minmaxSim.SBP.best{p} = estimatedSBP;
             minmaxSim.DBP.best{p} = estimatedDBP;
             SVsim=trapz(simLast.t,simLast.x(:,inds{p}.AV));
-            EFsim = 100*SVsim/max(simLast.x(:,5));
+            
+            EDVsim = max(simLast.x(:,inds{p}.LV));
+            ESVsim = min(simLast.x(:,inds{p}.LV));
+            EFsim=100*(EDVsim-ESVsim)/EDVsim;%100 * SV/EDV = 100*(EDV-ESV)/EDV
             minmaxSim.SV.best{p} = SVsim;
             minmaxSim.EF.best{p} = EFsim;
             
@@ -88,6 +96,12 @@ else
                 minmaxSim.([minmaxSim.pressurenames{pr} 'diff']).best{p} = max(thispressure)-min(thispressure);
             end
             
+            %save the best simulation and parameter set for
+            %sensitivity analysis
+            minmaxSim.SBP.bestParams{p} = bestParams(:,p);
+            minmaxSim.SBP.bestSim{p} = simLast;
+            minmaxSim.DBP.bestParams{p} = bestParams(:,p);
+            minmaxSim.DBP.bestSim{p} = simLast;
         end
         
         %reduce number of simulated params if they are too many
@@ -108,7 +122,10 @@ else
             simLast = simulate_avatarHEALTH_short(paramsToSim(:,s),constants(:,p),options,numHeartBeats,inds{p},simtime);
             [estimatedSBP,estimatedDBP] = brachialpressure(simLast,inds{p},data{p});
             SVsim=trapz(simLast.t,simLast.x(:,inds{p}.AV));
-            EFsim = 100*SVsim/max(simLast.x(:,5));
+            
+            EDVsim = max(simLast.x(:,inds{p}.LV));
+            ESVsim = min(simLast.x(:,inds{p}.LV));
+            EFsim=100*(EDVsim-ESVsim)/EDVsim;%100 * SV/EDV = 100*(EDV-ESV)/EDV
             if isempty(bestParams) && s == 1
                 minmaxSim.States.min{p} = simLast.x;
                 minmaxSim.States.max{p} = simLast.x;
@@ -144,6 +161,13 @@ else
                 for obs = 1:size(simLast.y,2)
                     minmaxSim.all{obs}{p} =  zeros(size(parameters{p},1),length(simtime));
                 end
+                
+                %save the best simulation and parameter set for
+                %sensitivity analysis
+                minmaxSim.SBP.bestParams{p} = paramsToSim(:,s);
+                minmaxSim.SBP.bestSim{p} = simLast;
+                minmaxSim.DBP.bestParams{p} = paramsToSim(:,s);
+                minmaxSim.DBP.bestSim{p} = simLast;
             else
                 % Save the maximum and minimum values for each simulated variable in a struct
                 minmaxSim.States.min{p} = min(simLast.x,minmaxSim.States.min{p});
@@ -167,11 +191,41 @@ else
                     minmaxSim.([minmaxSim.pressurenames{pr} 'diff']).min{p} = min(max(thispressure)-min(thispressure),minmaxSim.([minmaxSim.pressurenames{pr} 'diff']).min{p});
                 end
             end
+            
+            if max(estimatedSBP,minmaxSim.SBP.max{p}) == estimatedSBP
+                %save the maximum simulation and parameter set for
+                %sensitivity analysis
+                minmaxSim.SBP.maxParams{p} = paramsToSim(:,s);
+                minmaxSim.SBP.maxSim{p} = simLast;
+            end
+            if max(estimatedDBP,minmaxSim.DBP.max{p}) == estimatedDBP
+                %save the maximum simulation and parameter set for
+                %sensitivity analysis
+                minmaxSim.DBP.maxParams{p} = paramsToSim(:,s);
+                minmaxSim.DBP.maxSim{p} = simLast;
+            end
+            if min(estimatedSBP,minmaxSim.SBP.max{p}) == estimatedSBP
+                %save the minimum simulation and parameter set for
+                %sensitivity analysis
+                minmaxSim.SBP.minParams{p} = paramsToSim(:,s);
+                minmaxSim.SBP.minSim{p} = simLast;
+            end
+            if min(estimatedDBP,minmaxSim.DBP.max{p}) == estimatedDBP
+                %save the minimum simulation and parameter set for
+                %sensitivity analysis
+                minmaxSim.DBP.minParams{p} = paramsToSim(:,s);
+                minmaxSim.DBP.minSim{p} = simLast;
+            end
+            
+            allSims{p}{s} = simLast;
+            allPressure.SBP{p}(s) = estimatedSBP;
+            allPressure.DBP{p}(s) = estimatedDBP;
         end
+        allParams{p} = paramsToSim;
     end
     w = warning('on','all');
     if saveResults
-        save(sprintf('../Parameters/MCMC/minmaxsims_%s',datestr(now,'yymmdd-hhMM')),'minmaxSim','patNums');
+        save(sprintf('Parameters/MCMC/minmaxsims_%s',datestr(now,'yymmdd-hhMM')),'minmaxSim','patNums');
     end
 end
 

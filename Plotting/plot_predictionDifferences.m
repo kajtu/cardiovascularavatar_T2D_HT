@@ -1,6 +1,6 @@
 function [ttestTablePredictions] = plot_predictionDifferences(simulations,patNums,ynames,plotFolderName)
-% Compares model predictions of the maximum and minimum pressures in the LA
-% and LV between the four groups.
+% Compares model predictions of the maximum and minimum pressures in the LV
+% and the mean pressure in the LA between the four groups.
 
 %% Setup colors and font size
 magmacols = flip(magma(4));
@@ -14,32 +14,23 @@ fzsupersmall = 8;
 
 %% Prepare for statistical test - calculate prediction variables
 % Maximum pressures
-units = {'mmHg','mmHg'};
-predictionNames= {'maxpLA','maxpLV'};
-predictionNamesNice = {'Maximum LA pressure','Maximum LV pressure'};
-ypredNames = {'pLA','pLV'};
+units = {'mmHg','mmHg','mmHg'};
+predictionNames= {'maxpLV','minpLV','meanpLA'};
+predictionNamesNice = {'Maximum LV pressure','Minimum LV pressure','Mean LA pressure'};
+ypredNames = {'pLV','pLV','pLA'};
 allVariableValues = zeros(length(patNums),length(predictionNames));
 for pred = 1:length(predictionNames)
     predictionStruct.(predictionNames{pred}) = zeros(size(patNums));
     for pat = 1:length(patNums)
         predind = strcmp(ynames,ypredNames{pred});
-        predictionStruct.(predictionNames{pred})(pat) = max(simulations{pat}.y(:,predind));
+        if strcmp(predictionNames{pred}(1:3),'max')
+            predictionStruct.(predictionNames{pred})(pat) = max(simulations{pat}.y(:,predind));
+        elseif strcmp(predictionNames{pred}(1:3),'min')
+            predictionStruct.(predictionNames{pred})(pat) = min(simulations{pat}.y(:,predind));
+        else
+            predictionStruct.(predictionNames{pred})(pat) = mean(simulations{pat}.y(:,predind));
+        end
         allVariableValues(pat,pred) = predictionStruct.(predictionNames{pred})(pat);
-    end
-end
-npred = length(ypredNames);
-
-% Minimum pressures
-prevpredind = pred;
-units = [units,{'mmHg','mmHg'}];
-predictionNames= [predictionNames,{'minpLA','minpLV'}];
-predictionNamesNice= [predictionNamesNice,{'Minimum LA pressure','Minimum LV pressure'}];
-for pred = 1:length(ypredNames)
-    predictionStruct.(predictionNames{npred+pred}) = zeros(size(patNums));
-    for pat = 1:length(patNums)
-        predind = strcmp(ynames,ypredNames{pred});
-        predictionStruct.(predictionNames{npred+pred})(pat) = min(simulations{pat}.y(:,predind));
-        allVariableValues(pat,pred+prevpredind) = predictionStruct.(predictionNames{npred+pred})(pat);
     end
 end
 

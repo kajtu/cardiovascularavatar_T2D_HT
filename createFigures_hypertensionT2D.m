@@ -64,9 +64,13 @@ for p = 1:length(patNums)
     end
     maxSVdiffData(p) = max(dataSV) - min(dataSV);
     
+    % Calculate normalizing factors for elastance function based on the parameters
+    T = constants(inds{p}.T,p);
+    constants(end,p) = calc_norm_factor(T,bestparamValues(inds{p}.k_syst_LV,p),bestparamValues(inds{p}.k_diast_LV,p),bestparamValues(inds{p}.m1_LV,p),bestparamValues(inds{p}.m2_LV,p));
+    constants(end-1,p) = calc_norm_factor(T,bestparamValues(inds{p}.k_syst_LA,p),bestparamValues(inds{p}.k_diast_LA,p),bestparamValues(inds{p}.m1_LA,p),bestparamValues(inds{p}.m2_LA,p));
+    
     % Simulate
     step = 0.001;
-    T = constants(inds{p}.T,p);
     simtime = sort([data{p}.time,0:step:T]);
     simtime = unique(simtime);
     options.x0 = data{p}.IC;
@@ -107,6 +111,10 @@ varnames = {'min lb','max lb','mean lb','min ub','max ub','mean ub'};
 lbubtable = table(min(lbs)',max(lbs)',mean(lbs)',min(ubs)',max(ubs)',mean(ubs)','Rownames',paramNames,'Variablenames',varnames);
 writetable(lbubtable,fullfile(plotFolderName,'parameter_bounds.xlsx'),"WriteRowNames",1)
 
+% Create a table with constants
+constantTable = table(min(constants(5:end,:),[],2),max(constants(5:end,:),[],2),'RowNames',constantsNames(5:end),'Variablenames',{'Min value','Max value'});
+writetable(constantTable,fullfile(plotFolderName,'constants.xlsx'),"WriteRowNames",1)
+
 % Load (or simulate)the simulation uncertainty for all subjects
 cd Simulation
 loadResults=1;
@@ -121,8 +129,8 @@ disp('Plotting fit to data...')
 plot_fitToData_uncertainty(minmaxSim,patNums,bestparamValues,paramuncertainty,paramNames,data,inds,fittedcost,plotFolderName);
 
 disp('Plotting fit to data: validation...')
-plot_validation_uncertainty(minmaxSim,paramuncertainty,bestparamValues,constants,simLast,inds,options,data,extradata,patNums,xnames,plotFolderName)
-%%
+plot_validation_uncertainty(minmaxSim,simLast,data,extradata,patNums,xnames,plotFolderName)
+
 disp('Plotting box plot of parameter differences...')
 [testTableParameters,meantableParameters,mediantableParameters,...
     statisticsTableParams,numRejectedHypParameters] = plot_parameterDifferences(paramNames,medianParams,patNums,bounds,inds{p},units,plotFolderName);
@@ -135,6 +143,12 @@ disp('Plotting clusters and PCA results...')
 
 disp('Plotting box plot of prediction differences...')
 [testTablePredictions] = plot_predictionDifferences(simLast,patNums,ynames,plotFolderName);
+
+disp('Calculating sensitivity to blood pressure measurement...')
+load('./Parameters/bestpatients.mat','pbestT2Dh')
+pat = strcmp(patNums, pbestT2Dh);
+doPlot = 0;
+plot_BPsensitivity(data{pat},simLast{pat},medianParams(:,pat),constants(:,pat),inds{pat},ynames,xnames,options,plotFolderName,paramNames,constantsNames,doPlot)
 
 cd ..
 

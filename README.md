@@ -34,6 +34,8 @@ The optimization ran in 8 batches of 10 subjects at a time at the Swedish NSC. T
 
 To re-run the MCMC sampling, run runParamEstimationSeveral_MCMC_asNSC. The MCMC sampling ran in 3 batches at the swedish NSC: subject 1-32, subject 33-64, and subject 65-80. The script runParamEstimationSeveral_ESS_asNSC runs the optimization in the same way as it was done at the NSC - but you need to manually change the variables patrange and numberOfSubjects. On a normal workstation, this could take days or weeks.
 
+The parameter estimation for different training data for SBP and DBP to calculate of model sensitivity to that data was done using the scripts *runHEALTH_changeBP_SBPmax.sh* etc, which runs *EstimateParametersESS_HEALTH_changeBP.m* several times for different data input of SBP and DBP for subject 5 (the HT+T2D subject with best fit to data) and saves the results in the folder Parameters\BPsensitivity.
+
 # Simulation
 An example of using the model to do a simple simulation can be found in the script *simpleModelSimulation.m*.
 The model file is found in the folder Modelfiles (*avatar_HEALTH_syms_fast.m*).

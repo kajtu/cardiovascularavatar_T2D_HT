@@ -10,7 +10,6 @@ if nargin <6
     colors = {[0 0 0],liuOrange,liuBlue,liuLilac,orange2,blue2};
 end
 fz1 = 8.5;
-fz2 = 10;
 
 r = 3;c=2;
 figure('Name',figureName,'Visible','off')
@@ -20,7 +19,7 @@ xdim_CM = 17;
 ydim_CM = 12.75;
 set(gcf,'Units','centimeters','Position',[0 0 xdim_CM ydim_CM])
 set(gcf,'PaperUnits', 'centimeters', 'PaperSize', [xdim_CM, ydim_CM])
-tiles=tiledlayout(r,c,'TileSpacing','loose','Padding','compact');
+tiledlayout(r,c,'TileSpacing','loose','Padding','compact');
 
 nexttile
 yInd = strcmp('mvCorr',ynames);
@@ -105,7 +104,7 @@ for y = 1:length(yparamsToPlot)
             tend = simulations{s}.time{p}(end);
             t = 100.*[simulations{s}.time{p}./tend;flipud(simulations{s}.time{p}./tend)];
             yvals = [simulations{s}.Observables.min{p}(:,yInd);flipud(simulations{s}.Observables.max{p}(:,yInd))];
-            fill(t,yvals,colors{s},'FaceAlpha',0.4,'EdgeColor','none')%0.6
+            fill(t,yvals,colors{s},'FaceAlpha',0.4,'EdgeColor','none')
             plot(100.*simulations{s}.time{p}./tend,simulations{s}.Observables.best{p}(:,yInd),'-','color',colors{s},'LineWidth',2.2)
         end
     end

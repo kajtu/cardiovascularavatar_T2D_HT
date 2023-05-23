@@ -45,6 +45,8 @@ if doParamEst
                 resultsfolder = 'Parameters/MCMC';
         elseif strcmp(method,'HEALTH')
             resultsfolder = 'Parameters/ESS';
+        elseif strcmp(method,'HEALTH_BP_sensitivity')
+            resultsfolder = 'Parameters/BPsensitivity';
         elseif doPV
             resultsfolder = 'Parameters/Fitted to PV';
         else

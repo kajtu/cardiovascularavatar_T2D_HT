@@ -29,19 +29,19 @@ pHTT2D = pbestT2Dh;
 %This takes several minutes
 disp('*** Simulating uncertainty for the control subject... *** ')
 [~,data_CNT,~,bestparams_CNT,constants_CNT,paramNames,constantsNames,ynames,xnames,options,inds_CNT,~,~,~,~,~,paramuncertainty_CNT] = setup_simulations_HEALTH({pC},resultfolder,0);
-[~,minmaxSimCNT] = simulatePredictionUncertainty({pC},[],[],paramuncertainty_CNT.allokParams,bestparams_CNT,constants_CNT,inds_CNT,data_CNT,options);
+[~,minmaxSimCNT,allSimsCNT,allParamsCNT,allPressureCNT] = simulatePredictionUncertainty({pC},[],[],paramuncertainty_CNT.allokParams,bestparams_CNT,constants_CNT,inds_CNT,data_CNT,options);
 
 disp('*** Simulating uncertainty for the T2D subject... *** ')
 [~,data_T2DNT,~,bestparams_T2DNT,constants_T2DNT,~,~,~,~,~,inds_T2DNT,~,~,~,~,~,paramuncertainty_T2DNT] = setup_simulations_HEALTH({pT2D},resultfolder,0);
-[~,minmaxSimT2DNT] = simulatePredictionUncertainty({pT2D},[],[],paramuncertainty_T2DNT.allokParams,bestparams_T2DNT,constants_T2DNT,inds_T2DNT,data_T2DNT,options);
+[~,minmaxSimT2DNT,allSimsT2DNT,allParamsT2DNT,allPressureT2DNT] = simulatePredictionUncertainty({pT2D},[],[],paramuncertainty_T2DNT.allokParams,bestparams_T2DNT,constants_T2DNT,inds_T2DNT,data_T2DNT,options);
 
 disp('*** Simulating uncertainty for the HT subject... *** ')
 [~,data_CHT,~,bestparams_CHT,constants_CHT,~,~,~,~,~,inds_CHT,~,~,~,~,~,paramuncertainty_CHT] = setup_simulations_HEALTH({pHT},resultfolder,0);
-[~,minmaxSimCHT] = simulatePredictionUncertainty({pHT},[],[],paramuncertainty_CHT.allokParams,bestparams_CHT,constants_CHT,inds_CHT,data_CHT,options);
+[~,minmaxSimCHT,allSimsCHT,allParamsCHT,allPressureCHT] = simulatePredictionUncertainty({pHT},[],[],paramuncertainty_CHT.allokParams,bestparams_CHT,constants_CHT,inds_CHT,data_CHT,options);
 
 disp('*** Simulating uncertainty for the HT+T2D subject... *** ')
 [~,data_T2DHT,~,bestparams_T2DHT,constants_T2DHT,~,~,~,~,~,inds_T2DHT,~,~,~,~,~,paramuncertainty_T2DHT] = setup_simulations_HEALTH({pHTT2D},resultfolder,0);
-[~,minmaxSimT2DHT] = simulatePredictionUncertainty({pHTT2D},[],[],paramuncertainty_T2DHT.allokParams,bestparams_T2DHT,constants_T2DHT,inds_T2DHT,data_T2DHT,options);
+[~,minmaxSimT2DHT,allSimsT2DHT,allParamsT2DHT,allPressureT2DHT] = simulatePredictionUncertainty({pHTT2D},[],[],paramuncertainty_T2DHT.allokParams,bestparams_T2DHT,constants_T2DHT,inds_T2DHT,data_T2DHT,options);
 
 %% Plot the simulations of the subjects from the 4 groups
 magmacols = flip(magma(4));
@@ -49,6 +49,78 @@ colors = num2cell(magmacols,2);
 simulationNames = {'Control','T2D','Hypertensive',sprintf('T2D &\nhypertensive')}';
 simulations = {minmaxSimCNT,minmaxSimT2DNT,minmaxSimCHT,minmaxSimT2DHT};
 plotPredictionUncertaintyNice(simulations,simulationNames,xnames,ynames,'Subjects from 4 groups',colors)
+
+%% Plot sensitivity to brachial pressure
+figure()
+tiledlayout(3,2)
+fz1=10;
+nexttile
+paramInd = strcmp('m2_LV',paramNames);
+hold on
+% pressuresims = {allPressureCNT,allPressureT2DNT,allPressureCHT,allPressureT2DHT};
+% paramsims = {allParamsCNT{1},allParamsT2DNT{1},allParamsCHT{1},allParamsT2DHT{1}};
+pressuresims = {allPressureCNT};
+paramsims = {allParamsCNT{1}};
+simsims = {allSimsCNT{1}};
+for s = 1:length(pressuresims)
+    for p = 1:length(pressuresims{s}.SBP{1})
+        plot(pressuresims{s}.SBP{1}(p),paramsims{s}(paramInd,p),'*','color',colors{s},'LineWidth',2.2)
+    end
+end
+xlabel('SBP','FontSize',fz1)
+ylabel('m2 LV','FontSize',fz1)
+set(gca,'FontSize',fz1)
+
+nexttile
+paramInd = strcmp('m2_LV',paramNames);
+hold on
+for s = 1:length(pressuresims)
+    for p = 1:length(pressuresims{s}.SBP{1})
+        plot(pressuresims{s}.DBP{1}(p),paramsims{s}(paramInd,p),'*','color',colors{s},'LineWidth',2.2)
+    end
+end
+xlabel('DBP','FontSize',fz1)
+ylabel('m2 LV','FontSize',fz1)
+set(gca,'FontSize',fz1)
+
+
+nexttile
+paramInd = strcmp('Emax_LV',paramNames);
+hold on
+for s = 1:length(pressuresims)
+    for p = 1:length(pressuresims{s}.SBP{1})
+        plot(pressuresims{s}.SBP{1}(p),paramsims{s}(paramInd,p),'*','color',colors{s},'LineWidth',2.2)
+    end
+end
+xlabel('SBP','FontSize',fz1)
+ylabel('Emax LV','FontSize',fz1)
+set(gca,'FontSize',fz1)
+
+nexttile
+paramInd = strcmp('Emax_LV',paramNames);
+hold on
+for s = 1:length(pressuresims)
+    for p = 1:length(pressuresims{s}.SBP{1})
+        plot(pressuresims{s}.DBP{1}(p),paramsims{s}(paramInd,p),'*','color',colors{s},'LineWidth',2.2)
+    end
+end
+xlabel('DBP','FontSize',fz1)
+ylabel('Emax LV','FontSize',fz1)
+set(gca,'FontSize',fz1)
+
+
+nexttile
+predInd = strcmp('Qav',xnames);
+hold on
+for s = 1:length(pressuresims)
+    for p = 1:length(pressuresims{s}.SBP{1})
+        plot(pressuresims{s}.SBP{1}(p),max(simsims{s}{p}.x(:,predInd)),'*','color',colors{s},'LineWidth',2.2)
+    end
+end
+xlabel('SBP','FontSize',fz1)
+ylabel('Qav max','FontSize',fz1)
+set(gca,'FontSize',fz1)
+
 
 %% Simulate prediction: control to reduced m2LV in HT+T2D
 % Set parameter values for the prediction

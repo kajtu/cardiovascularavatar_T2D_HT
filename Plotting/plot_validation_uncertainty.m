@@ -1,4 +1,4 @@
-function []=plot_validation_uncertainty(minmaxSim,paramuncertainty,bestparams,constants,simLast,indexes,options,data,extradata,patNums,xnames,plotFolderName)
+function []=plot_validation_uncertainty(minmaxSim,simLast,data,extradata,patNums,xnames,plotFolderName)
 %% Setup colors
 colornames = {'MV','AV','AA','pulmonary','LA','LV','peripheral'};
 namesavatar = {'pulmonary','LA','MV','LV','AV','AA','peripheral'};
@@ -15,6 +15,8 @@ SVacDat = zeros(size(patNums));
 SVavDat = zeros(size(patNums));
 SVmriDat = zeros(size(patNums));
 SVsim = zeros(size(patNums));
+EFdat = zeros(size(patNums));
+EFsim = zeros(size(patNums));
 
 for p = 1:length(patNums)
     SVmriDat(p)=data{p}.EDV-data{p}.ESV;
@@ -22,6 +24,12 @@ for p = 1:length(patNums)
     SVavDat(p)=extradata{p}.SV_AV;
     SVacDat(p)=extradata{p}.SV_AC;
     SVsim(p)=trapz(simLast{p}.t,simLast{p}.x(:,strcmp(xnames,'Qav')));
+    
+    EDVsim = max(simLast{p}.x(:,strcmp(xnames,'Vlv')));
+    ESVsim = min(simLast{p}.x(:,strcmp(xnames,'Vlv')));
+    EFsim(p)=100*(EDVsim-ESVsim)/EDVsim;%100 * SV/EDV = 100*(EDV-ESV)/EDV
+    EFdat(p) = 100*(data{p}.EDV - data{p}.ESV)/data{p}.EDV;
+
 end
 
 %% Create valiation plot with prediction vs data
@@ -50,6 +58,32 @@ createValidationPlot_uncertainty(t,tiles,SVmriDat,SVsim,colorLV,[0.3 0.3 0.3],LW
 title('Validation: SV left ventricle (3D cine MRI data)')
 
 legend([t.Children(1),t.Children(2)],'Data','Simulation uncertainty','Position',[0.554274030341607 0.673662299047534 0.198336696744927 0.0419312177890192])
+
+%% Create valiation plot with prediction vs data with ejection fraction included
+figure('Visible', 'on','Name','validation_predictionVSdata_uncertainty_EF');
+set(gcf,'Color','white')
+xdim_CM = 17.5;
+ydim_CM = 12;
+set(gcf,'Units','centimeters','Position',[0 0 xdim_CM ydim_CM])
+set(gcf,'PaperUnits', 'centimeters', 'PaperSize', [xdim_CM, ydim_CM])
+LW = 1.5;
+tiles=tiledlayout(9,2,'Padding','compact','TileSpacing','Compact');
+t=nexttile([3 1]);
+createValidationPlot_uncertainty(t,tiles,SVmvDat,SVsim,colors{1},[0.3 0.3 0.3],LW,sprintf('Stroke volume in the\nmitral valve (mL)'),'',minmaxSim.SV)
+
+t=nexttile([4 1]);
+createValidationPlot_uncertainty(t,tiles,SVmriDat,SVsim,colorLV,[0.3 0.3 0.3],LW,sprintf('Stroke volume in the\nleft ventricle (mL)'),'',minmaxSim.SV)
+
+t=nexttile([3 1]);
+createValidationPlot_uncertainty(t,tiles,SVavDat,SVsim,colors{2},[0.3 0.3 0.3],LW,sprintf('Stroke volume in the\naortic valve (mL)'),'',minmaxSim.SV)
+
+t=nexttile([4 1]);
+createValidationPlot_uncertainty(t,tiles,EFdat,EFsim,colorLV,[0.3 0.3 0.3],LW,'Ejection fraction (%)','',minmaxSim.EF)
+
+t=nexttile([3 1]);
+createValidationPlot_uncertainty(t,tiles,SVacDat,SVsim,colors{3},[0.3 0.3 0.3],LW,sprintf('Stroke volume in the\nascending aorta (mL)'),'',minmaxSim.SV)
+
+legend([t.Children(1),t.Children(2)],'Data','Simulation uncertainty','Position',[0.568127934623723 0.901175526560761 0.198336696744927 0.0419312177890192])
 
 %% Save figures
 saveAllFigures(plotFolderName)
@@ -85,6 +119,7 @@ ylabel(t,ylabelname)
 xlim(t,[0 length(patorder)+1])
 xticks([1 round(length(patorder)/2) length(patorder)])
 xticklabels({'1','Subject number',num2str(length(average))})
+xtickangle(0)
 
 TilePos = tiles.Children.InnerPosition;
 chnum = size(tiles.Children);
@@ -98,5 +133,6 @@ if h>1
 end
 letter = annotation('textbox',[TilePos(1)-0.035 h .015 .015],'String',lettertowrite,'Linestyle','none','FitBoxToText','on','BackgroundColor','none');
 
+set(gca,'FontSize',8.8)
 
 end
