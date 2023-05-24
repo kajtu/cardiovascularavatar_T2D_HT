@@ -35,7 +35,7 @@ end
 
 % Plot
 if plotMedian
-    figure('Visible', 'on','Name',[names.figname '_median'])
+    figure('Visible', 'off','Name',[names.figname '_median'])
 else
     figure('Visible', 'off','Name',[names.figname '_mean'])
 end

@@ -60,7 +60,7 @@ title('Validation: SV left ventricle (3D cine MRI data)')
 legend([t.Children(1),t.Children(2)],'Data','Simulation uncertainty','Position',[0.554274030341607 0.673662299047534 0.198336696744927 0.0419312177890192])
 
 %% Create valiation plot with prediction vs data with ejection fraction included
-figure('Visible', 'on','Name','validation_predictionVSdata_uncertainty_EF');
+figure('Visible', 'off','Name','validation_predictionVSdata_uncertainty_EF');
 set(gcf,'Color','white')
 xdim_CM = 17.5;
 ydim_CM = 12;

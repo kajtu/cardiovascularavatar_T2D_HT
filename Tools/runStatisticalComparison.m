@@ -6,8 +6,8 @@ function [groupTable2,statisticsTable,meanTable,checkMean,checkNormality,...
 % statisticsTable: with all statistics saved: statistics, confidence
 % intervals, rejection true/false and p-values
 
-pathbase = split(pwd,'cardiovascularavatar_HEALTH_T2D_HT');
-addpath(fullfile(pathbase{1},'cardiovascularavatar_HEALTH_T2D_HT/Requirements/Statistical_tests'))
+pathbase = split(pwd,'cardiovascularavatar_T2D_HT');
+addpath(fullfile(pathbase{1},'cardiovascularavatar_T2D_HT/Requirements/Statistical_tests'))
 
 %% load group indexes based on patNums
 [groups] = loadGroupIndexes(patNums);

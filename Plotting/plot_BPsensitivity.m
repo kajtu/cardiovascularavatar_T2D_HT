@@ -166,11 +166,19 @@ dvarsdDBPmax = nan(length(varsToPlot),1);
 dvarsdDBPmin = nan(length(varsToPlot),1);
 dvarsdDBPmaxN = nan(length(varsToPlot),1);
 dvarsdDBPminN = nan(length(varsToPlot),1);
+
+dvarsdDBPmeanN = nan(length(varsToPlot),1);
+dvarsdSBPmeanN = nan(length(varsToPlot),1);
+dvarsdDBPmean = nan(length(varsToPlot),1);
+dvarsdSBPmean = nan(length(varsToPlot),1);
+
 for var = 1:length(varsToPlot)
     obsValueMaxS = nan(size(SBP));
     obsValueMinS = nan(size(SBP));
     obsValueMaxD = nan(size(SBP));
     obsValueMinD = nan(size(SBP));
+    obsValueMeanD = nan(size(SBP));
+    obsValueMeanS = nan(size(SBP));
     isstate = sum(strcmp(varsToPlot{var},xnames));
     obsValuesAllS = getVariableValues(allSims.SBP,varsToPlot{var},ynames,xnames,isstate);
     obsValuesAllD = getVariableValues(allSims.DBP,varsToPlot{var},ynames,xnames,isstate);
@@ -181,30 +189,38 @@ for var = 1:length(varsToPlot)
         obsValueMinD(i) = obsValuesAllD(i,tmin);
         obsValueMaxS(i) = obsValuesAllS(i,tmax);
         obsValueMinS(i) = obsValuesAllS(i,tmin);
+        obsValueMeanS(i) = mean(obsValuesAllS(i,:));
+        obsValueMeanD(i) = mean(obsValuesAllD(i,:));
     end
     dvarmax = gradient(obsValueMaxS,SBP);
     dvarmin = gradient(obsValueMinS,SBP);
+    dvarmean = gradient(obsValueMeanS,SBP);
     dvarsdSBPmax(var)=dvarmax(2);
     dvarsdSBPmin(var)=dvarmin(2);
-    dvarsdSBPmaxN(var)=dvarmax(2)/obsValueMaxS(2);
-    dvarsdSBPminN(var)=dvarmin(2)/obsValueMinS(2);
+    dvarsdSBPmean(var)=dvarmean(2);
+    dvarsdSBPmaxN(var)=dvarmax(2)/abs(obsValueMaxS(2));
+    dvarsdSBPminN(var)=dvarmin(2)/abs(obsValueMinS(2));
+    dvarsdSBPmeanN(var)=dvarmean(2)/abs(obsValueMeanS(2));
     
     dvarmax = gradient(obsValueMaxD,DBP);
     dvarmin = gradient(obsValueMinD,DBP);
+    dvarmean = gradient(obsValueMeanD,DBP);
     dvarsdDBPmax(var)=dvarmax(2);
     dvarsdDBPmin(var)=dvarmin(2);
-    dvarsdDBPmaxN(var)=dvarmax(2)/obsValueMaxD(2);
-    dvarsdDBPminN(var)=dvarmin(2)/obsValueMinD(2);
+    dvarsdDBPmean(var)=dvarmean(2);
+    dvarsdDBPmaxN(var)=dvarmax(2)/abs(obsValueMaxD(2));
+    dvarsdDBPminN(var)=dvarmin(2)/abs(obsValueMinD(2));
+    dvarsdDBPmeanN(var)=dvarmean(2)/abs(obsValueMeanD(2));
 end
 expl={'Normalized sensitivity to SBP (% per mmHg)',...
     'Normalized sensitivity to DBP (% per mmHg)',...
     'Sensitivity to SBP (per mmHg)',...
     'Sensitivity to DBP (per mmHg)'};
-BPsensitivity_vars = table(round(100*[dvarsdSBPminN;dvarsdSBPmaxN],3),...
-    round(100*[dvarsdDBPminN;dvarsdDBPmaxN],3),...
-    [dvarsdSBPmin;dvarsdSBPmax],...
-    [dvarsdDBPmin;dvarsdDBPmax],...
-    'RowNames',[strcat(varsToPlot,' (min)'),strcat(varsToPlot,' (max)')],'VariableNames',expl);
+BPsensitivity_vars = table(round(100*[dvarsdSBPminN;dvarsdSBPmaxN;dvarsdSBPmeanN],3),...
+    round(100*[dvarsdDBPminN;dvarsdDBPmaxN;dvarsdDBPmeanN],3),...
+    [dvarsdSBPmin;dvarsdSBPmax;dvarsdSBPmean],...
+    [dvarsdDBPmin;dvarsdDBPmax;dvarsdDBPmean],...
+    'RowNames',[strcat(varsToPlot,' (min)'),strcat(varsToPlot,' (max)'),strcat(varsToPlot,' (mean)')],'VariableNames',expl);
 writetable(BPsensitivity_vars,fullfile(plotFolderName,'BPsensitivity_vars.xlsx'),"WriteRowNames",1)
 
 %% Save figures
