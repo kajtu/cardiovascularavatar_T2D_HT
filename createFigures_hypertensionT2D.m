@@ -15,7 +15,9 @@ addpath(['.' filesep 'Tools'])
 addpath(['.' filesep 'Simulation'])
 
 % Load data and optimizaton results for all subjects
-resultsFolder = 'Parameters/ESS';
+pathbase = split(pwd,'cardiovascularavatar_T2D_HT');
+pathbase = [pathbase{1},filesep, 'cardiovascularavatar_T2D_HT'];
+resultsFolder = fullfile(pathbase,'Parameters','ESS');
 [patNums, data,extradata,bestparamValues,constants,paramNames,...
     constantsNames,ynames,xnames,options,inds,origParamvalues,...
     units,loadedcosts,meanParams,medianParams,paramuncertainty] =setup_simulations_HEALTH([],resultsFolder,0);
@@ -64,12 +66,8 @@ for p = 1:length(patNums)
     end
     maxSVdiffData(p) = max(dataSV) - min(dataSV);
     
-    % Calculate normalizing factors for elastance function based on the parameters
-    T = constants(inds{p}.T,p);
-    constants(end,p) = calc_norm_factor(T,bestparamValues(inds{p}.k_syst_LV,p),bestparamValues(inds{p}.k_diast_LV,p),bestparamValues(inds{p}.m1_LV,p),bestparamValues(inds{p}.m2_LV,p));
-    constants(end-1,p) = calc_norm_factor(T,bestparamValues(inds{p}.k_syst_LA,p),bestparamValues(inds{p}.k_diast_LA,p),bestparamValues(inds{p}.m1_LA,p),bestparamValues(inds{p}.m2_LA,p));
-    
     % Simulate
+    T = constants(inds{p}.T,p);
     step = 0.001;
     simtime = sort([data{p}.time,0:step:T]);
     simtime = unique(simtime);
@@ -112,7 +110,7 @@ lbubtable = table(min(lbs)',max(lbs)',mean(lbs)',min(ubs)',max(ubs)',mean(ubs)',
 writetable(lbubtable,fullfile(plotFolderName,'parameter_bounds.xlsx'),"WriteRowNames",1)
 
 % Create a table with constants
-constantTable = table(min(constants(5:end,:),[],2),max(constants(5:end,:),[],2),'RowNames',constantsNames(5:end),'Variablenames',{'Min value','Max value'});
+constantTable = table(min(constants(5:end-2,:),[],2),max(constants(5:end-2,:),[],2),'RowNames',constantsNames(5:end-2),'Variablenames',{'Min value','Max value'});
 writetable(constantTable,fullfile(plotFolderName,'constants.xlsx'),"WriteRowNames",1)
 
 % Load (or simulate)the simulation uncertainty for all subjects
@@ -145,7 +143,7 @@ disp('Plotting box plot of prediction differences...')
 [testTablePredictions] = plot_predictionDifferences(simLast,patNums,ynames,plotFolderName);
 
 disp('Calculating sensitivity to blood pressure measurement...')
-load('./Parameters/bestpatients.mat','pbestT2Dh')
+load(fullfile(pathbase,'Parameters','bestpatients.mat'),'pbestT2Dh')
 pat = strcmp(patNums, pbestT2Dh);
 doPlot = 0;
 plot_BPsensitivity(data{pat},simLast{pat},medianParams(:,pat),constants(:,pat),inds{pat},ynames,xnames,options,plotFolderName,paramNames,constantsNames,doPlot)

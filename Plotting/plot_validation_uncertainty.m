@@ -20,9 +20,9 @@ EFsim = zeros(size(patNums));
 
 for p = 1:length(patNums)
     SVmriDat(p)=data{p}.EDV-data{p}.ESV;
-    SVmvDat(p)=extradata{p}.SV_MV;
-    SVavDat(p)=extradata{p}.SV_AV;
-    SVacDat(p)=extradata{p}.SV_AC;
+    SVmvDat(p)=extradata{p}.SV_MV; %integral of blood flow in time points inddiast:end
+    SVavDat(p)=extradata{p}.SV_AV; %integral of blood flow in time points 1:inddiast
+    SVacDat(p)=extradata{p}.SV_AC; %integral of blood flow in time points 1:inddiast
     SVsim(p)=trapz(simLast{p}.t,simLast{p}.x(:,strcmp(xnames,'Qav')));
     
     EDVsim = max(simLast{p}.x(:,strcmp(xnames,'Vlv')));
@@ -31,6 +31,43 @@ for p = 1:length(patNums)
     EFdat(p) = 100*(data{p}.EDV - data{p}.ESV)/data{p}.EDV;
 
 end
+
+%% Check differences in stroke volume data
+cine_vs_flowMV = mean(SVmriDat - SVmvDat);
+cine_vs_flowAV = mean(SVmriDat - SVavDat);
+cine_vs_flowAA = mean(SVmriDat - SVacDat);
+flowAA_vs_flowMV = mean(SVacDat - SVmvDat);
+flowAA_vs_flowAV = mean(SVacDat - SVavDat);
+flowAV_vs_flowMV = mean(SVavDat - SVmvDat);
+
+mcine_vs_flowMV = median(SVmriDat - SVmvDat);
+mcine_vs_flowAV = median(SVmriDat - SVavDat);
+mcine_vs_flowAA = median(SVmriDat - SVacDat);
+mflowAA_vs_flowMV = median(SVacDat - SVmvDat);
+mflowAA_vs_flowAV = median(SVacDat - SVavDat);
+mflowAV_vs_flowMV = median(SVavDat - SVmvDat);
+
+pcine_vs_flowMV = mean((SVmriDat - SVmvDat)./SVmvDat);
+pcine_vs_flowAV = mean((SVmriDat - SVavDat)./SVmvDat);
+pcine_vs_flowAA = mean((SVmriDat - SVacDat)./SVmvDat);
+pflowAA_vs_flowMV = mean((SVacDat - SVmvDat)./SVmvDat);
+pflowAA_vs_flowAV = mean((SVacDat - SVavDat)./SVmvDat);
+pflowAV_vs_flowMV = mean((SVavDat - SVmvDat)./SVmvDat);
+
+mpcine_vs_flowMV = median((SVmriDat - SVmvDat)./SVmvDat);
+mpcine_vs_flowAV = median((SVmriDat - SVavDat)./SVmvDat);
+mpcine_vs_flowAA = median((SVmriDat - SVacDat)./SVmvDat);
+mpflowAA_vs_flowMV = median((SVacDat - SVmvDat)./SVmvDat);
+mpflowAA_vs_flowAV = median((SVacDat - SVavDat)./SVmvDat);
+mpflowAV_vs_flowMV = median((SVavDat - SVmvDat)./SVmvDat);
+
+SVdiffsmean = [cine_vs_flowMV,cine_vs_flowAV,cine_vs_flowAA,flowAA_vs_flowMV,flowAA_vs_flowAV,flowAV_vs_flowMV]';
+SVdiffsmedian = [mcine_vs_flowMV,mcine_vs_flowAV,mcine_vs_flowAA,mflowAA_vs_flowMV,mflowAA_vs_flowAV,mflowAV_vs_flowMV]';
+SVdiffspercentofMV = 100*[pcine_vs_flowMV,pcine_vs_flowAV,pcine_vs_flowAA,pflowAA_vs_flowMV,pflowAA_vs_flowAV,pflowAV_vs_flowMV]';
+SVdiffspercentofMVmedian = 100*[mpcine_vs_flowMV,mpcine_vs_flowAV,mpcine_vs_flowAA,mpflowAA_vs_flowMV,mpflowAA_vs_flowAV,mpflowAV_vs_flowMV]';
+SVdifftable = table(SVdiffsmean,SVdiffsmedian,SVdiffspercentofMV,SVdiffspercentofMVmedian,'Variablenames',...
+    {'Mean stroke volume difference','Median stroke volume difference (ml)','Mean stroke volume difference (% of MV SV)','Median stroke volume difference (% of MV SV)'},...
+    'Rownames',{'3D cine vs MV','3D cine vs AV','3D cine vs AA','AA vs MV','AA vs AV','AV vs MV'});
 
 %% Create valiation plot with prediction vs data
 figure('Visible', 'off','Name','validation_predictionVSdata_uncertainty');
@@ -60,7 +97,7 @@ title('Validation: SV left ventricle (3D cine MRI data)')
 legend([t.Children(1),t.Children(2)],'Data','Simulation uncertainty','Position',[0.554274030341607 0.673662299047534 0.198336696744927 0.0419312177890192])
 
 %% Create valiation plot with prediction vs data with ejection fraction included
-figure('Visible', 'on','Name','validation_predictionVSdata_uncertainty_EF');
+figure('Visible', 'off','Name','validation_predictionVSdata_uncertainty_EF');
 set(gcf,'Color','white')
 xdim_CM = 17.5;
 ydim_CM = 12;
