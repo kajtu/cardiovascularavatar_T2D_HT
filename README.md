@@ -1,5 +1,5 @@
 # Cardiovascular Avatar T2D HT
-These are the scripts to reproduce the results in the publication *"Hemodynamic effects of hypertension and type 2 diabetes - insights through a 4D flow MRI-based personalized cardiovascular model"*.
+These are the scripts to reproduce the results in the publication *"Hemodynamic effects of hypertension and type 2 diabetes - insights through a 4D flow MRI-based personalized cardiovascular model"* (DOI: [10.1113/JP284652](https://doi.org/10.1113/JP284652), Tunedal et al 2023).
 
 If you use this implementation in your academic projects, please cite this paper.
 
